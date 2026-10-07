@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>¡Felices 6 Añitos!</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Nunito', sans-serif; background-color: #fdf2f8; }
+    h1, h2, .font-fun { font-family: 'Fredoka One', cursive; }
+    .hidden { display: none; }
+    .fade-in { animation: fadeIn 1.5s ease-in-out forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+    
+    #game-area {
+      position: relative;
+      width: 100%;
+      max-width: 500px;
+      height: 300px;
+      background-color: #fce7f3;
+      border: 4px dashed #f472b6;
+      border-radius: 20px;
+      overflow: hidden;
+      margin: 0 auto;
+      cursor: crosshair;
+    }
+    .target {
+      position: absolute;
+      font-size: 2.5rem;
+      user-select: none;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+    .target:active { transform: scale(1.3); }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 text-center">
+
+  <!-- SECCIÓN DEL JUEGO -->
+  <div id="intro-section" class="max-w-xl w-full">
+    <h1 class="text-4xl md:text-5xl text-pink-500 mb-4 font-fun">¡La fiesta sigue! 🐾</h1>
+    <p class="text-lg md:text-xl text-gray-700 mb-6">
+      Ayer la reina de la casa cumplió <strong>6 añitos</strong>.<br>
+      ¡Atrapa 10 ratoncitos para destapar su sorpresa!
+    </p>
+
+    <div id="game-area" class="shadow-lg">
+      <div class="absolute top-2 right-4 font-fun text-xl text-pink-600 z-10 bg-white/70 px-3 py-1 rounded-full">
+        Atrapados: <span id="score">0</span> / 10
+      </div>
+    </div>
+  </div>
+
+  <div id="surprise-section" class="max-w-md w-full bg-white rounded-3xl shadow-2xl p-6 hidden">
+    <h1 class="text-4xl text-pink-500 mb-2 font-fun">¡Felices 6 Añitos! 😻</h1>
+    <p class="text-pink-400 mb-6 font-bold tracking-wide uppercase text-sm">Un muy feliz cumple atrasadowaa</p>
+
+    <div class="relative w-48 mx-auto mb-6 rounded-2xl overflow-hidden border-4 border-pink-200 shadow-md">
+      <img id="cat-image" src="assets/image.png" alt="La cumpleañera" class="w-full h-auto block">
+    </div>
+
+    <p class="text-gray-700 text-lg mb-6 leading-relaxed">
+      Aunque fue ayer, ¡hoy lo seguimos celebrando! Que esta preciosa gatita siga llenando la casa de ronroneos, travesuras y siestas al sol. ¡Es toda una princesa! 👑
+    </p>
+  </div>
+
+  <script>
+    let score = 0;
+    const maxScore = 10;
+    const gameArea = document.getElementById('game-area');
+    const scoreDisplay = document.getElementById('score');
+    const introSection = document.getElementById('intro-section');
+    const surpriseSection = document.getElementById('surprise-section');
+    let gameInterval;
+
+    const emojis = ['🐁', '🐭', '🧶', '🐟'];
+
+    function spawnTarget() {
+      const target = document.createElement('div');
+      target.className = 'target';
+      target.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+
+      const size = 50;
+      const startY = Math.random() * (gameArea.clientHeight - size);
+      target.style.top = `${startY}px`;
+
+      const goingRight = Math.random() > 0.5;
+      target.style.left = goingRight ? `-60px` : `${gameArea.clientWidth + 10}px`;
+
+      gameArea.appendChild(target);
+
+      const duration = 1800 + Math.random() * 2000;
+      const endX = goingRight ? gameArea.clientWidth + 60 : -60;
+
+      const animation = target.animate([
+        { left: target.style.left },
+        { left: `${endX}px` }
+      ], {
+        duration: duration,
+        easing: 'linear'
+      });
+
+      animation.onfinish = () => target.remove();
+
+      target.addEventListener('mousedown', hitTarget);
+      target.addEventListener('touchstart', (e) => { 
+        e.preventDefault(); 
+        hitTarget.call(target); 
+      });
+    }
+
+    function hitTarget() {
+      this.remove();
+      score++;
+      scoreDisplay.innerText = score;
+      
+      confetti({
+        particleCount: 15,
+        spread: 40,
+        origin: { 
+          x: (this.getBoundingClientRect().left + 25) / window.innerWidth,
+          y: (this.getBoundingClientRect().top + 25) / window.innerHeight
+        },
+        colors: ['#f472b6', '#a78bfa', '#fbbf24']
+      });
+
+      if (score >= maxScore) {
+        endGame();
+      }
+    }
+
+    function endGame() {
+      clearInterval(gameInterval);
+      gameArea.innerHTML = '';
+      
+      introSection.classList.add('hidden');
+      surpriseSection.classList.remove('hidden');
+      surpriseSection.classList.add('fade-in');
+
+      triggerGrandConfetti();
+    }
+
+    function triggerGrandConfetti() {
+      const duration = 3500;
+      const end = Date.now() + duration;
+
+      (function frame() {
+        confetti({
+          particleCount: 6,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0 },
+          colors: ['#f472b6', '#fbcfe8', '#ffffff']
+        });
+        confetti({
+          particleCount: 6,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1 },
+          colors: ['#f472b6', '#fbcfe8', '#ffffff']
+        });
+
+        if (Date.now() < end) {
+          requestAnimationFrame(frame);
+        }
+      }());
+    }
+
+    gameInterval = setInterval(spawnTarget, 700);
+  </script>
+</body>
+</html>
